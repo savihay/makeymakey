@@ -41,7 +41,7 @@
 
     .drum-kit {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
       max-width: 600px;
       width: 90vw;
@@ -162,50 +162,35 @@
   </div>
 
   <div class="drum-kit" id="kit">
-    <div class="pad pad-kick"    data-key="ArrowLeft"  data-sound="kick">
+    <div class="pad pad-kick"  data-key="ArrowLeft"  data-sound="kick">
       <span class="pad-icon">🔴</span>
       <span class="pad-name">קיק</span>
       <span class="pad-key">←</span>
     </div>
-    <div class="pad pad-snare"   data-key=" "          data-sound="snare">
+    <div class="pad pad-snare" data-key="ArrowRight" data-sound="snare">
       <span class="pad-icon">🔵</span>
       <span class="pad-name">סנייר</span>
-      <span class="pad-key">SPACE</span>
-    </div>
-    <div class="pad pad-hihat"   data-key="ArrowRight" data-sound="hihat">
-      <span class="pad-icon">🟢</span>
-      <span class="pad-name">היי-האט</span>
       <span class="pad-key">→</span>
     </div>
-    <div class="pad pad-tom"     data-key="ArrowUp"    data-sound="tom">
-      <span class="pad-icon">🟣</span>
-      <span class="pad-name">טום</span>
+    <div class="pad pad-hihat" data-key="ArrowUp"    data-sound="hihat">
+      <span class="pad-icon">🟢</span>
+      <span class="pad-name">היי-האט</span>
       <span class="pad-key">↑</span>
     </div>
-    <div class="pad pad-crash"   data-key="ArrowDown"  data-sound="crash">
-      <span class="pad-icon">🟡</span>
-      <span class="pad-name">קראש</span>
+    <div class="pad pad-tom"   data-key="ArrowDown"  data-sound="tom">
+      <span class="pad-icon">🟣</span>
+      <span class="pad-name">טום</span>
       <span class="pad-key">↓</span>
     </div>
-    <div class="pad pad-clap"    data-key="w"          data-sound="clap">
+    <div class="pad pad-crash" data-key=" "          data-sound="crash">
+      <span class="pad-icon">🟡</span>
+      <span class="pad-name">קראש</span>
+      <span class="pad-key">SPACE</span>
+    </div>
+    <div class="pad pad-clap"  data-key="Enter"      data-sound="clap">
       <span class="pad-icon">🩷</span>
       <span class="pad-name">מחיאות</span>
-      <span class="pad-key">W</span>
-    </div>
-    <div class="pad pad-ride"    data-key="a"          data-sound="ride">
-      <span class="pad-icon">🔷</span>
-      <span class="pad-name">ריידר</span>
-      <span class="pad-key">A</span>
-    </div>
-    <div class="pad pad-cowbell" data-key="s"          data-sound="cowbell">
-      <span class="pad-icon">🔔</span>
-      <span class="pad-name">פעמון</span>
-      <span class="pad-key">S</span>
-    </div>
-    <div class="pad pad-bass"    data-key="f"          data-sound="bass">
-      <span class="pad-icon">🎸</span>
-      <span class="pad-name">בס</span>
-      <span class="pad-key">F</span>
+      <span class="pad-key">ENTER</span>
     </div>
   </div>
 

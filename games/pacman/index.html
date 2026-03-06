@@ -586,22 +586,35 @@
     }
 
     let lastTime = 0;
+    const TARGET_FPS = 60;
+    const FRAME_MS = 1000 / TARGET_FPS;
+    let accumulator = 0;
 
     function frame(ts) {
       if (gameState !== 'playing') return;
       animFrame = requestAnimationFrame(frame);
 
-      // Power timer
-      if (powerTimer > 0) {
-        powerTimer--;
-        if (powerTimer === 0) {
-          ghosts.forEach(g => { g.scared = false; });
-        }
-      }
+      const delta = ts - lastTime;
+      lastTime = ts;
+      // Clamp delta so a tab-switch doesn't cause a huge jump
+      accumulator += Math.min(delta, 100);
 
-      movePacman();
-      ghosts.forEach((g, i) => moveGhost(g, i));
-      checkCollisions();
+      while (accumulator >= FRAME_MS) {
+        accumulator -= FRAME_MS;
+
+        // Power timer
+        if (powerTimer > 0) {
+          powerTimer--;
+          if (powerTimer === 0) {
+            ghosts.forEach(g => { g.scared = false; });
+          }
+        }
+
+        movePacman();
+        ghosts.forEach((g, i) => moveGhost(g, i));
+        checkCollisions();
+        if (gameState !== 'playing') break;
+      }
 
       // Draw
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -612,7 +625,8 @@
 
     function loop() {
       cancelAnimationFrame(animFrame);
-      animFrame = requestAnimationFrame(frame);
+      accumulator = 0;
+      animFrame = requestAnimationFrame(ts => { lastTime = ts; animFrame = requestAnimationFrame(frame); });
     }
 
     // ── Start button ─────────────────────────────────────────────────────────
