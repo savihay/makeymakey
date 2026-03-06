@@ -1,4 +1,4 @@
-# 🎮 מייקי-מייקי של תל
+# MakeyMakey של טל
 
 A webapp of fun games and activities for [MakeyMakey](https://makeymakey.com/), designed for Tal (age 9).
 
@@ -6,7 +6,7 @@ A webapp of fun games and activities for [MakeyMakey](https://makeymakey.com/), 
 
 | Game | Keys |
 |------|------|
-| 🥁 Drum Machine | ↑ ↓ ← → Space W A S F |
+| 🥁 Drum Machine | ↑ ↓ ← → Space Enter |
 | 👾 Pac-Man | ↑ ↓ ← → |
 
 ## Running
