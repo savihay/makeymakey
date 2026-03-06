@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,10 +17,11 @@
       align-items: center;
       min-height: 100vh;
       overflow: hidden;
+      direction: ltr;
     }
 
     .back-btn {
-      position: fixed; top: 14px; right: 14px;
+      position: fixed; top: 14px; left: 14px;
       background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
       border-radius: 12px; padding: 8px 14px; color: #fff; text-decoration: none;
       font-weight: 700; font-size: 0.85rem; z-index: 100;
@@ -32,6 +33,7 @@
       position: fixed; inset: 0; background: #0a0a0f;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 24px; z-index: 50; padding: 20px;
+      direction: rtl;
     }
 
     #songPicker h1 {
@@ -50,7 +52,7 @@
       border-radius: 16px; padding: 16px 20px;
       display: flex; align-items: center; gap: 16px;
       cursor: pointer; transition: transform 0.15s, border-color 0.15s;
-      text-align: right;
+      text-align: right; color: #fff;
     }
     .song-btn:hover { transform: scale(1.02); border-color: var(--c); }
     .song-emoji { font-size: 2rem; }
@@ -63,21 +65,25 @@
     }
 
     /* ── Game screen ── */
-    #gameScreen { display: none; flex-direction: column; align-items: center; width: 100%; }
+    #gameScreen {
+      display: none; flex-direction: column; align-items: center; width: 100%;
+      direction: ltr;
+    }
 
     #topBar {
       display: flex; gap: 30px; padding: 10px 20px; font-family: 'Fredoka One', cursive;
-      font-size: 1.2rem; width: 100%; justify-content: center;
+      font-size: 1.1rem; width: 100%; justify-content: center; direction: rtl;
     }
     #topBar span { color: #ffd700; }
 
-    /* ── Highway ── */
-    #highway {
+    /* ── Highway container ── */
+    .highway-wrap {
       position: relative;
       width: min(95vw, 560px);
-      border-radius: 12px;
+      border-radius: 12px 12px 0 0;
       overflow: hidden;
-      border: 2px solid #222;
+      border: 2px solid #333;
+      border-bottom: none;
       background: #0d0d14;
     }
 
@@ -88,30 +94,41 @@
       display: flex; width: min(95vw, 560px);
       border-radius: 0 0 12px 12px;
       overflow: hidden;
+      border: 2px solid #333;
+      border-top: none;
+      direction: ltr;
     }
 
     .hit-label {
-      flex: 1; padding: 8px 4px; text-align: center;
-      font-family: 'Fredoka One', cursive; font-size: 0.85rem;
+      flex: 1; padding: 10px 4px; text-align: center;
+      font-family: 'Fredoka One', cursive; font-size: 0.9rem;
       background: var(--lc); color: #000;
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-      cursor: pointer; user-select: none; transition: filter 0.08s;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; user-select: none; transition: filter 0.08s, transform 0.08s;
       -webkit-tap-highlight-color: transparent;
     }
-    .hit-label.flash { filter: brightness(2.5); }
-    .hit-label .lkey { font-size: 0.65rem; font-family: monospace; opacity: 0.7; }
+    .hit-label.flash { filter: brightness(2.5); transform: scale(0.92); }
+    .hit-label .lkey { font-size: 0.7rem; font-family: monospace; opacity: 0.6; }
+
+    /* ── Countdown ── */
+    #countdown {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7); z-index: 55;
+      font-family: 'Fredoka One', cursive; font-size: 8rem; color: #ffd700;
+    }
 
     /* ── Result popup ── */
     .result-pop {
-      position: absolute; font-family: 'Fredoka One', cursive;
-      font-size: 1.4rem; pointer-events: none;
-      animation: popUp 0.7s ease-out forwards;
+      position: fixed; font-family: 'Fredoka One', cursive;
+      font-size: 1.3rem; pointer-events: none;
+      animation: popUp 0.6s ease-out forwards;
       text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-      z-index: 10;
+      z-index: 10; text-align: center; width: 120px;
     }
     @keyframes popUp {
       0%   { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+      100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
     }
 
     /* ── End overlay ── */
@@ -120,6 +137,7 @@
       background: rgba(0,0,0,0.88);
       flex-direction: column; align-items: center; justify-content: center;
       gap: 16px; z-index: 60; font-family: 'Fredoka One', cursive; text-align: center;
+      direction: rtl;
     }
     #endOverlay h2 { font-size: 3rem; }
     #endOverlay p { color: #a0a8ff; font-size: 1.2rem; }
@@ -141,6 +159,9 @@
     <div class="song-list" id="songList"></div>
   </div>
 
+  <!-- Countdown -->
+  <div id="countdown"></div>
+
   <!-- Game screen -->
   <div id="gameScreen">
     <div id="topBar">
@@ -148,9 +169,8 @@
       רצף: <span id="comboEl">0</span>x &nbsp;|&nbsp;
       <span id="songNameEl" style="color:#ff6fd8"></span>
     </div>
-    <div id="highway">
+    <div class="highway-wrap">
       <canvas id="highway-canvas"></canvas>
-      <div id="hitZoneOverlay" style="position:absolute;bottom:0;left:0;right:0;height:52px;pointer-events:none;"></div>
     </div>
     <div id="hitLabels"></div>
   </div>
@@ -173,14 +193,14 @@
 
   function resume() { if (ac.state === 'suspended') ac.resume(); }
 
-  function playKick()   {
+  function playKick() {
     const o=ac.createOscillator(), g=ac.createGain();
     o.frequency.setValueAtTime(160,ac.currentTime);
     o.frequency.exponentialRampToValueAtTime(0.001,ac.currentTime+0.45);
     g.gain.setValueAtTime(1,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.45);
     o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+0.45);
   }
-  function playSnare()  {
+  function playSnare() {
     const buf=ac.createBuffer(1,ac.sampleRate*0.18,ac.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
     const s=ac.createBufferSource(); s.buffer=buf;
@@ -188,7 +208,7 @@
     const g=ac.createGain(); g.gain.setValueAtTime(0.8,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.18);
     s.connect(f); f.connect(g); g.connect(ac.destination); s.start();
   }
-  function playHihat()  {
+  function playHihat() {
     const buf=ac.createBuffer(1,ac.sampleRate*0.08,ac.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
     const s=ac.createBufferSource(); s.buffer=buf;
@@ -196,13 +216,13 @@
     const g=ac.createGain(); g.gain.setValueAtTime(0.35,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.08);
     s.connect(f); f.connect(g); g.connect(ac.destination); s.start();
   }
-  function playTom()    {
+  function playTom() {
     const o=ac.createOscillator(), g=ac.createGain();
     o.frequency.setValueAtTime(110,ac.currentTime); o.frequency.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);
     g.gain.setValueAtTime(0.8,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);
     o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+0.35);
   }
-  function playCrash()  {
+  function playCrash() {
     const buf=ac.createBuffer(1,ac.sampleRate*0.8,ac.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
     const s=ac.createBufferSource(); s.buffer=buf;
@@ -210,7 +230,7 @@
     const g=ac.createGain(); g.gain.setValueAtTime(0.5,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.8);
     s.connect(f); f.connect(g); g.connect(ac.destination); s.start();
   }
-  function playClap()   {
+  function playClap() {
     [0,0.01,0.02].forEach(off => {
       const buf=ac.createBuffer(1,Math.floor(ac.sampleRate*0.12),ac.sampleRate), d=buf.getChannelData(0);
       for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
@@ -221,12 +241,6 @@
       s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t);
     });
   }
-  function playMiss()   {
-    const o=ac.createOscillator(), g=ac.createGain();
-    o.type='sawtooth'; o.frequency.value=120;
-    g.gain.setValueAtTime(0.3,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.15);
-    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+0.15);
-  }
   function beep(f,d,vol=0.3) {
     const o=ac.createOscillator(), g=ac.createGain();
     o.frequency.value=f; g.gain.setValueAtTime(vol,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+d);
@@ -234,122 +248,54 @@
   }
 
   // ── Lanes config ──────────────────────────────────────────────────────────
-  // lane index → { key, label, color, playFn, name }
   const LANES = [
-    { key:'ArrowLeft',  label:'←',     color:'#ef4444', play:playKick,  name:'קיק'    },
-    { key:'ArrowUp',    label:'↑',     color:'#22c55e', play:playHihat, name:'היי-האט'},
-    { key:'ArrowRight', label:'→',     color:'#3b82f6', play:playSnare, name:'סנייר'  },
-    { key:'ArrowDown',  label:'↓',     color:'#a855f7', play:playTom,   name:'טום'    },
-    { key:' ',          label:'SPACE', color:'#f59e0b', play:playCrash, name:'קראש'   },
-    { key:'Enter',      label:'ENTER', color:'#ec4899', play:playClap,  name:'מחיאות' },
+    { key:'ArrowLeft',  label:'←',     color:'#ef4444', play:playKick,  name:'Kick'    },
+    { key:'ArrowUp',    label:'↑',     color:'#22c55e', play:playHihat, name:'HiHat'   },
+    { key:'ArrowRight', label:'→',     color:'#3b82f6', play:playSnare, name:'Snare'   },
+    { key:'ArrowDown',  label:'↓',     color:'#a855f7', play:playTom,   name:'Tom'     },
+    { key:' ',          label:'SPACE', color:'#f59e0b', play:playCrash, name:'Crash'   },
+    { key:'Enter',      label:'ENTER', color:'#ec4899', play:playClap,  name:'Clap'    },
   ];
 
-  // Key → lane index
   const KEY_TO_LANE = {};
   LANES.forEach((l,i) => KEY_TO_LANE[l.key] = i);
 
   // ── Songs ─────────────────────────────────────────────────────────────────
-  // Each note: [beat_offset, lane_index]  (beat_offset = beat number * 1 for quarter, 0.5 for 8th etc.)
-  // Songs defined at given BPM; engine converts to ms.
-  // Lanes: 0=Kick 1=HiHat 2=Snare 3=Tom 4=Crash 5=Clap
-
-  function makeBeats(bpm, pattern, bars) {
-    const beatMs = 60000 / bpm;
-    const notes = [];
-    for (let b = 0; b < bars; b++) {
-      pattern.forEach(([beat, lane]) => {
-        notes.push({ time: (b * 4 + beat) * beatMs, lane });
-      });
-    }
-    return notes;
-  }
-
   const SONGS = [
     {
-      id: 'wewillrockyou',
-      name: 'We Will Rock You',
-      artist: 'Queen',
-      emoji: '👑',
-      color: '#f59e0b',
-      diff: 'קל',
-      bpm: 82,
-      // Boom boom clap: Kick Kick Snare  (kick on beat 1 & "and" of 1, snare on 2)
-      pattern: [
-        [0, 0], [0.5, 0], [1, 2],  // boom boom clap
-        [2, 0], [2.5, 0], [3, 2],  // boom boom clap
-      ],
+      id:'wewillrockyou', name:'We Will Rock You', artist:'Queen',
+      emoji:'👑', color:'#f59e0b', diff:'קל', bpm:82,
+      pattern: [[0,0],[0.5,0],[1,2],[2,0],[2.5,0],[3,2]],
       bars: 8,
     },
     {
-      id: 'sevennationarmy',
-      name: 'Seven Nation Army',
-      artist: 'The White Stripes',
-      emoji: '⚡',
-      color: '#ef4444',
-      diff: 'קל',
-      bpm: 124,
-      pattern: [
-        [0,0],[1,2],[1.5,3],[2,0],[2.5,0],[3,2],[3.5,3],
-      ],
+      id:'sevennationarmy', name:'Seven Nation Army', artist:'The White Stripes',
+      emoji:'⚡', color:'#ef4444', diff:'קל', bpm:124,
+      pattern: [[0,0],[1,2],[1.5,3],[2,0],[2.5,0],[3,2],[3.5,3]],
       bars: 8,
     },
     {
-      id: 'rockbeat',
-      name: 'Rock Beat קלאסי',
-      artist: 'שיר יסוד לכל מתופף',
-      emoji: '🤘',
-      color: '#a855f7',
-      diff: 'בינוני',
-      bpm: 100,
-      // HiHat every 8th, Kick on 1&3, Snare on 2&4
-      pattern: [
-        [0,1],[0,0],   [0.5,1],
-        [1,1],[1,2],   [1.5,1],
-        [2,1],[2,0],   [2.5,1],
-        [3,1],[3,2],   [3.5,1],
-      ],
+      id:'rockbeat', name:'Rock Beat קלאסי', artist:'שיר יסוד לכל מתופף',
+      emoji:'🤘', color:'#a855f7', diff:'בינוני', bpm:100,
+      pattern: [[0,1],[0,0],[0.5,1],[1,1],[1,2],[1.5,1],[2,1],[2,0],[2.5,1],[3,1],[3,2],[3.5,1]],
       bars: 8,
     },
     {
-      id: 'anotherbites',
-      name: 'Another One Bites the Dust',
-      artist: 'Queen',
-      emoji: '💀',
-      color: '#22c55e',
-      diff: 'בינוני',
-      bpm: 110,
-      pattern: [
-        [0,0],[0.5,0],[0.75,0],[1,2],
-        [1.5,1],[2,0],[2.5,0],[2.75,0],[3,2],[3.5,1],
-      ],
+      id:'anotherbites', name:'Another One Bites the Dust', artist:'Queen',
+      emoji:'💀', color:'#22c55e', diff:'בינוני', bpm:110,
+      pattern: [[0,0],[0.5,0],[0.75,0],[1,2],[1.5,1],[2,0],[2.5,0],[2.75,0],[3,2],[3.5,1]],
       bars: 8,
     },
     {
-      id: 'eyeofthetiger',
-      name: 'Eye of the Tiger',
-      artist: 'Survivor',
-      emoji: '🐯',
-      color: '#ec4899',
-      diff: 'קשה',
-      bpm: 109,
-      pattern: [
-        [0,0],[0.5,0],[0.75,0],[1,2],[1.5,3],
-        [2,0],[2.5,0],[2.75,0],[3,2],[3,4],[3.5,1],
-      ],
+      id:'eyeofthetiger', name:'Eye of the Tiger', artist:'Survivor',
+      emoji:'🐯', color:'#ec4899', diff:'קשה', bpm:109,
+      pattern: [[0,0],[0.5,0],[0.75,0],[1,2],[1.5,3],[2,0],[2.5,0],[2.75,0],[3,2],[3,4],[3.5,1]],
       bars: 10,
     },
     {
-      id: 'acdc',
-      name: 'Back in Black',
-      artist: 'AC/DC',
-      emoji: '⚡',
-      color: '#3b82f6',
-      diff: 'קשה',
-      bpm: 92,
-      pattern: [
-        [0,4],[0,0],[0.5,1],[1,2],[1.5,1],
-        [2,0],[2.5,1],[3,2],[3.5,1],[3.75,0],
-      ],
+      id:'acdc', name:'Back in Black', artist:'AC/DC',
+      emoji:'⚡', color:'#3b82f6', diff:'קשה', bpm:92,
+      pattern: [[0,4],[0,0],[0.5,1],[1,2],[1.5,1],[2,0],[2.5,1],[3,2],[3.5,1],[3.75,0]],
       bars: 10,
     },
   ];
@@ -368,7 +314,7 @@
       </div>
       <span class="song-diff" style="background:${song.color}">${song.diff}</span>
     `;
-    btn.addEventListener('click', () => startSong(song));
+    btn.addEventListener('click', () => launchSong(song));
     songListEl.appendChild(btn);
   });
 
@@ -378,9 +324,9 @@
   const N = LANES.length;
 
   const HIGHWAY_H = 480;
-  const HIT_Y = HIGHWAY_H - 52;   // y of hit zone center
-  const NOTE_SPEED = 200;          // px per second
-  const HIT_WINDOW_GOOD    = 180;  // ms window
+  const HIT_Y = HIGHWAY_H - 52;
+  const NOTE_SPEED = 200;
+  const HIT_WINDOW_GOOD    = 180;
   const HIT_WINDOW_PERFECT = 80;
 
   function resize() {
@@ -391,7 +337,7 @@
   resize();
   window.addEventListener('resize', resize);
 
-  // Build hit labels
+  // Build hit labels (LTR order — matches canvas lane order)
   const hitLabelsEl = document.getElementById('hitLabels');
   LANES.forEach((lane, i) => {
     const div = document.createElement('div');
@@ -406,7 +352,7 @@
 
   // ── Game state ─────────────────────────────────────────────────────────────
   let currentSong = null;
-  let notes = [];       // { time, lane, y, hit, missed }
+  let notes = [];
   let startTime = 0;
   let elapsed = 0;
   let score = 0, combo = 0, maxCombo = 0, perfect = 0, good = 0, miss = 0;
@@ -416,14 +362,59 @@
   const scoreEl    = document.getElementById('scoreEl');
   const comboEl    = document.getElementById('comboEl');
   const songNameEl = document.getElementById('songNameEl');
+  const countdownEl = document.getElementById('countdown');
 
-  function startSong(song) {
+  // ── Countdown then start ───────────────────────────────────────────────────
+  function launchSong(song) {
     resume();
-    currentSong = song;
+
+    // Show game screen behind countdown
+    document.getElementById('songPicker').style.display = 'none';
+    document.getElementById('endOverlay').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'flex';
+    songNameEl.textContent = song.name;
+
+    // Draw empty highway
     score = combo = maxCombo = perfect = good = miss = 0;
     songDone = false;
+    notes = [];
+    updateHUD();
+    drawEmpty();
 
-    // Build notes with y positions (they start above the screen)
+    // 3-2-1 countdown
+    countdownEl.style.display = 'flex';
+    let count = 3;
+    countdownEl.textContent = count;
+    beep(440, 0.15, 0.4);
+
+    const iv = setInterval(() => {
+      count--;
+      if (count > 0) {
+        countdownEl.textContent = count;
+        beep(440, 0.15, 0.4);
+      } else {
+        countdownEl.textContent = '🥁';
+        beep(880, 0.25, 0.5);
+        setTimeout(() => {
+          countdownEl.style.display = 'none';
+          startSong(song);
+        }, 400);
+        clearInterval(iv);
+      }
+    }, 800);
+  }
+
+  function drawEmpty() {
+    const W = canvas.width;
+    ctx.clearRect(0, 0, W, HIGHWAY_H);
+    ctx.fillStyle = '#0d0d14';
+    ctx.fillRect(0, 0, W, HIGHWAY_H);
+    drawLanes();
+  }
+
+  function startSong(song) {
+    currentSong = song;
+
     const beatMs = 60000 / song.bpm;
     const rawNotes = [];
     for (let b = 0; b < song.bars; b++) {
@@ -433,8 +424,7 @@
     }
     rawNotes.sort((a,b) => a.time - b.time);
 
-    // Travel time from top to hit zone
-    const travelTime = HIT_Y / NOTE_SPEED * 1000; // ms for note to travel from top to hit zone
+    const travelTime = HIT_Y / NOTE_SPEED * 1000;
 
     notes = rawNotes.map(n => ({
       time: n.time,
@@ -444,14 +434,7 @@
       missed: false,
     }));
 
-    // Show game screen
-    document.getElementById('songPicker').style.display = 'none';
-    document.getElementById('endOverlay').style.display = 'none';
-    const gs = document.getElementById('gameScreen');
-    gs.style.display = 'flex';
-    songNameEl.textContent = song.name;
     updateHUD();
-
     startTime = performance.now();
     cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(loop);
@@ -467,7 +450,6 @@
     elapsed = ts - startTime;
     rafId = requestAnimationFrame(loop);
 
-    // Mark missed notes
     notes.forEach(n => {
       if (!n.hit && !n.missed && elapsed > n.time + HIT_WINDOW_GOOD) {
         n.missed = true;
@@ -479,7 +461,6 @@
 
     draw();
 
-    // End condition: all notes resolved + 2s buffer
     const lastNote = notes[notes.length - 1];
     if (!songDone && lastNote && elapsed > lastNote.time + 2000) {
       songDone = true;
@@ -489,76 +470,117 @@
   }
 
   // ── Draw ──────────────────────────────────────────────────────────────────
-  function draw() {
+  function drawLanes() {
     const W = canvas.width;
-    ctx.clearRect(0, 0, W, HIGHWAY_H);
-
-    // Background gradient
-    ctx.fillStyle = '#0d0d14';
-    ctx.fillRect(0, 0, W, HIGHWAY_H);
-
     const laneW = W / N;
 
-    // Lane dividers + subtle background
+    // Lane backgrounds with subtle color tint
     for (let i = 0; i < N; i++) {
       const x = i * laneW;
-      // Alternating subtle tint
-      ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0)';
+      ctx.fillStyle = LANES[i].color;
+      ctx.globalAlpha = 0.04;
       ctx.fillRect(x, 0, laneW, HIGHWAY_H);
-      // Divider line
+      ctx.globalAlpha = 1;
+
+      // Lane header strip
+      ctx.fillStyle = LANES[i].color;
+      ctx.globalAlpha = 0.3;
+      ctx.fillRect(x, 0, laneW, 4);
+      ctx.globalAlpha = 1;
+
+      // Divider
       if (i > 0) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HIGHWAY_H); ctx.stroke();
       }
     }
 
-    // Hit zone bar
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    // Hit zone
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(0, HIT_Y - 26, W, 52);
+
     for (let i = 0; i < N; i++) {
-      const x = i * laneW + laneW * 0.15;
-      const w = laneW * 0.7;
+      const x = i * laneW + laneW * 0.1;
+      const w = laneW * 0.8;
       ctx.strokeStyle = LANES[i].color;
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 2.5;
+      ctx.globalAlpha = 0.6;
       ctx.beginPath();
-      ctx.roundRect(x, HIT_Y - 20, w, 40, 8);
+      ctx.roundRect(x, HIT_Y - 20, w, 40, 10);
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
+  }
+
+  function draw() {
+    const W = canvas.width;
+    ctx.clearRect(0, 0, W, HIGHWAY_H);
+    ctx.fillStyle = '#0d0d14';
+    ctx.fillRect(0, 0, W, HIGHWAY_H);
+
+    const laneW = W / N;
+
+    drawLanes();
 
     // Notes
     notes.forEach(n => {
       if (n.hit || n.missed) return;
-      const age = elapsed - n.spawnTime; // ms since spawn
-      if (age < 0) return;              // not yet spawned
+      const age = elapsed - n.spawnTime;
+      if (age < 0) return;
 
-      const yFrac = age / 1000 * NOTE_SPEED;
-      const y = yFrac; // 0 = top, HIT_Y = target
-
+      const y = age / 1000 * NOTE_SPEED;
       if (y > HIGHWAY_H) return;
 
-      const x = n.lane * laneW + laneW * 0.12;
-      const w = laneW * 0.76;
-      const h = 28;
+      const x = n.lane * laneW + laneW * 0.1;
+      const w = laneW * 0.8;
+      const h = 30;
       const color = LANES[n.lane].color;
 
-      // Glow
+      // Glow trail
+      const grad = ctx.createLinearGradient(0, y - h*2, 0, y);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(1, color);
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = grad;
+      ctx.fillRect(x + w*0.2, y - h*2, w*0.6, h*2);
+      ctx.globalAlpha = 1;
+
+      // Note body
       ctx.shadowColor = color;
-      ctx.shadowBlur  = 18;
-      ctx.fillStyle   = color;
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.roundRect(x, y - h/2, w, h, 8);
+      ctx.roundRect(x, y - h/2, w, h, 10);
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Label inside note
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      // Inner highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.beginPath();
+      ctx.roundRect(x + 3, y - h/2 + 3, w - 6, h/2 - 3, 6);
+      ctx.fill();
+
+      // Label
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.font = `bold ${Math.round(laneW * 0.22)}px monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(LANES[n.lane].label, x + w/2, y);
+    });
+
+    // Missed notes flash
+    notes.forEach(n => {
+      if (!n.missed) return;
+      const age = elapsed - n.time - HIT_WINDOW_GOOD;
+      if (age > 300) return;
+      const alpha = 1 - age / 300;
+      const x = n.lane * laneW + laneW * 0.1;
+      const w = laneW * 0.8;
+      ctx.fillStyle = `rgba(255,60,60,${alpha * 0.5})`;
+      ctx.beginPath();
+      ctx.roundRect(x, HIT_Y - 20, w, 40, 10);
+      ctx.fill();
     });
 
     ctx.textAlign = 'left';
@@ -577,17 +599,14 @@
     resume();
     if (songDone) return;
 
-    // Play sound
     LANES[lane].play();
 
-    // Flash label
     const lbl = document.getElementById(`hl-${lane}`);
     lbl.classList.add('flash');
     setTimeout(() => lbl.classList.remove('flash'), 120);
 
     if (!currentSong) return;
 
-    // Find closest unhit note in this lane within window
     let best = null, bestDiff = Infinity;
     notes.forEach(n => {
       if (n.lane !== lane || n.hit || n.missed) return;
@@ -595,7 +614,7 @@
       if (diff < HIT_WINDOW_GOOD && diff < bestDiff) { best = n; bestDiff = diff; }
     });
 
-    if (!best) return; // no note to hit
+    if (!best) return;
 
     best.hit = true;
     const isPerfect = bestDiff < HIT_WINDOW_PERFECT;
@@ -605,7 +624,7 @@
     if (isPerfect) {
       score += 300 + combo * 10;
       perfect++;
-      showPop('PERFECT! ✨', lane, '#ffd700');
+      showPop('!PERFECT ✨', lane, '#ffd700');
       beep(880, 0.08, 0.2);
     } else {
       score += 100 + combo * 5;
@@ -619,29 +638,27 @@
   function showPop(text, lane, color) {
     const W = canvas.width;
     const laneW = W / N;
-    const x = lane * laneW + laneW / 2;
+    const rect = canvas.getBoundingClientRect();
+    const x = rect.left + lane * laneW + laneW / 2;
 
     const div = document.createElement('div');
     div.className = 'result-pop';
     div.textContent = text;
     div.style.color = color;
-    // Position relative to highway container
-    div.style.left  = (canvas.getBoundingClientRect().left + x - 50) + 'px';
-    div.style.top   = (canvas.getBoundingClientRect().top + HIT_Y - 60) + 'px';
-    div.style.width = '100px';
-    div.style.textAlign = 'center';
+    div.style.left  = (x - 60) + 'px';
+    div.style.top   = (rect.top + HIT_Y * (rect.height / HIGHWAY_H) - 50) + 'px';
     document.body.appendChild(div);
-    setTimeout(() => div.remove(), 700);
+    setTimeout(() => div.remove(), 600);
   }
 
   // ── End screen ────────────────────────────────────────────────────────────
   function showEnd() {
     const total = perfect + good + miss;
     const pct = Math.round((perfect + good) / total * 100);
-    let emoji = '😅', title = 'תנסה שוב!';
-    if (pct === 100) { emoji = '🏆'; title = 'מושלם לגמרי!'; }
-    else if (pct >= 80) { emoji = '🎉'; title = 'כל הכבוד!'; }
-    else if (pct >= 50) { emoji = '👍'; title = 'לא רע!'; }
+    let emoji = '😅', title = '!תנסה שוב';
+    if (pct === 100) { emoji = '🏆'; title = '!מושלם לגמרי'; }
+    else if (pct >= 80) { emoji = '🎉'; title = '!כל הכבוד'; }
+    else if (pct >= 50) { emoji = '👍'; title = '!לא רע'; }
 
     document.getElementById('endEmoji').textContent = emoji;
     document.getElementById('endTitle').textContent = title;
@@ -653,7 +670,7 @@
     const eo = document.getElementById('endOverlay');
     eo.style.display = 'flex';
 
-    document.getElementById('replayBtn').onclick     = () => startSong(currentSong);
+    document.getElementById('replayBtn').onclick = () => launchSong(currentSong);
     document.getElementById('backToSongsBtn').onclick = () => {
       eo.style.display = 'none';
       document.getElementById('gameScreen').style.display = 'none';
