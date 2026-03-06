@@ -379,7 +379,7 @@
 
   const HIGHWAY_H = 480;
   const HIT_Y = HIGHWAY_H - 52;   // y of hit zone center
-  const NOTE_SPEED = 280;          // px per second
+  const NOTE_SPEED = 200;          // px per second
   const HIT_WINDOW_GOOD    = 180;  // ms window
   const HIT_WINDOW_PERFECT = 80;
 
@@ -434,7 +434,7 @@
     rawNotes.sort((a,b) => a.time - b.time);
 
     // Travel time from top to hit zone
-    const travelTime = (HIGHWAY_H - HIT_Y) / NOTE_SPEED * 1000; // ms
+    const travelTime = HIT_Y / NOTE_SPEED * 1000; // ms for note to travel from top to hit zone
 
     notes = rawNotes.map(n => ({
       time: n.time,
