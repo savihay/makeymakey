@@ -425,15 +425,22 @@
         if (!br.alive) continue;
         if (b.x + BALL_R > br.x && b.x - BALL_R < br.x + br.w &&
             b.y + BALL_R > br.y && b.y - BALL_R < br.y + br.h) {
-          // Determine bounce direction
-          const fromLeft  = b.x - BALL_R - br.x;
-          const fromRight = br.x + br.w - (b.x + BALL_R);
-          const fromTop   = b.y - BALL_R - br.y;
-          const fromBot   = br.y + br.h - (b.y + BALL_R);
-          const minX = Math.min(Math.abs(fromLeft), Math.abs(fromRight));
-          const minY = Math.min(Math.abs(fromTop), Math.abs(fromBot));
-          if (minX < minY) b.dx = -b.dx;
-          else b.dy = -b.dy;
+          // Determine bounce direction and push ball out
+          const overlapLeft  = (b.x + BALL_R) - br.x;
+          const overlapRight = (br.x + br.w) - (b.x - BALL_R);
+          const overlapTop   = (b.y + BALL_R) - br.y;
+          const overlapBot   = (br.y + br.h) - (b.y - BALL_R);
+          const minOverlapX = Math.min(overlapLeft, overlapRight);
+          const minOverlapY = Math.min(overlapTop, overlapBot);
+          if (minOverlapX < minOverlapY) {
+            b.dx = -b.dx;
+            if (overlapLeft < overlapRight) b.x = br.x - BALL_R;
+            else b.x = br.x + br.w + BALL_R;
+          } else {
+            b.dy = -b.dy;
+            if (overlapTop < overlapBot) b.y = br.y - BALL_R;
+            else b.y = br.y + br.h + BALL_R;
+          }
 
           br.hp--;
           if (br.hp <= 0) {

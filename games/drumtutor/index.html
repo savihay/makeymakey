@@ -625,12 +625,10 @@
       score += 300 + combo * 10;
       perfect++;
       showPop('!PERFECT ✨', lane, '#ffd700');
-      beep(880, 0.08, 0.2);
     } else {
       score += 100 + combo * 5;
       good++;
       showPop('GOOD 👍', lane, '#a0ff80');
-      beep(660, 0.08, 0.15);
     }
     updateHUD();
   }
