@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 מייקי-מייקי של של תל</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: floatIn 0.8s ease-out;
+    }
+
+    .logo {
+      font-size: clamp(3rem, 8vw, 6rem);
+      background: linear-gradient(90deg, #ff6fd8, #3813c2, #00d2ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1.4rem;
+      color: #a8b4ff;
+      font-weight: 700;
+    }
+
+    .makey-icon {
+      font-size: 5rem;
+      display: block;
+      margin-bottom: 10px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .game-card {
+      background: rgba(255,255,255,0.07);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 40px 30px;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--card-glow);
+      opacity: 0;
+      transition: opacity 0.3s;
+      border-radius: 22px;
+    }
+
+    .game-card:hover::before { opacity: 1; }
+    .game-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      border-color: var(--card-color);
+    }
+
+    .game-card.drum { --card-color: #ff6fd8; --card-glow: radial-gradient(ellipse at center, rgba(255,111,216,0.15), transparent 70%); }
+    .game-card.pacman { --card-color: #ffd700; --card-glow: radial-gradient(ellipse at center, rgba(255,215,0,0.15), transparent 70%); }
+
+    .game-icon { font-size: 5rem; display: block; margin-bottom: 16px; }
+    .game-title { font-size: 2rem; margin-bottom: 10px; }
+    .game-desc { font-size: 1rem; color: #c0c8ff; line-height: 1.5; margin-bottom: 20px; }
+
+    .keys-hint {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .key {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    .play-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 32px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 900;
+      font-family: 'Fredoka One', cursive;
+      background: var(--card-color);
+      color: #111;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .play-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(-30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-12px); }
+    }
+
+    .footer {
+      margin-top: 60px;
+      color: #6070a0;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <span class="makey-icon">🎮</span>
+    <div class="logo">מייקי-מייקי של תל</div>
+    <p class="subtitle">חבר את הקרש ובוא נשחק! 🚀</p>
+  </div>
+
+  <div class="games-grid">
+    <a class="game-card drum" href="games/drum/index.html">
+      <span class="game-icon">🥁</span>
+      <div class="game-title">מכונת תופים</div>
+      <p class="game-desc">שחק תופים אמיתיים! כל כפתור במייקי-מייקי מנגן צליל אחר.</p>
+      <div class="keys-hint">
+        <span class="key">↑</span>
+        <span class="key">↓</span>
+        <span class="key">←</span>
+        <span class="key">→</span>
+        <span class="key">SPACE</span>
+      </div>
+      <div style="margin-top:20px;">
+        <span class="play-btn">בוא נשחק!</span>
+      </div>
+    </a>
+
+    <a class="game-card pacman" href="games/pacman/index.html">
+      <span class="game-icon">👾</span>
+      <div class="game-title">פאק-מן</div>
+      <p class="game-desc">הזז את פאק-מן עם חצי המייקי-מייקי ואכול את כל הנקודות!</p>
+      <div class="keys-hint">
+        <span class="key">↑</span>
+        <span class="key">↓</span>
+        <span class="key">←</span>
+        <span class="key">→</span>
+      </div>
+      <div style="margin-top:20px;">
+        <span class="play-btn" style="background:#ffd700;">בוא נשחק!</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="footer">
+    <p>🎛️ פועל עם MakeyMakey · עשוי באהבה לתל ❤️</p>
+  </div>
+</body>
+</html>

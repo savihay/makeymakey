@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥁 מכונת תופים</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(ellipse at center, #1a0533 0%, #0a0010 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      text-align: center;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #ff6fd8, #a855f7, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #9580a0;
+      font-size: 1rem;
+      margin-bottom: 40px;
+    }
+
+    .drum-kit {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 600px;
+      width: 90vw;
+      padding: 0 10px;
+    }
+
+    .pad {
+      position: relative;
+      border-radius: 20px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      border: 3px solid rgba(255,255,255,0.15);
+      transition: transform 0.08s, box-shadow 0.08s;
+      background: var(--pad-bg);
+      box-shadow: 0 8px 32px var(--pad-shadow);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pad:active, .pad.active {
+      transform: scale(0.93);
+      box-shadow: 0 2px 8px var(--pad-shadow), inset 0 0 30px rgba(255,255,255,0.3);
+      filter: brightness(1.4);
+    }
+
+    .pad-icon { font-size: 2.6rem; display: block; margin-bottom: 8px; }
+    .pad-name { font-family: 'Fredoka One', cursive; font-size: 1.2rem; display: block; }
+    .pad-key {
+      display: inline-block;
+      margin-top: 8px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+
+    /* Colors */
+    .pad-kick    { --pad-bg: linear-gradient(135deg, #7c2d12, #dc2626); --pad-shadow: rgba(220,38,38,0.4); }
+    .pad-snare   { --pad-bg: linear-gradient(135deg, #1e3a8a, #3b82f6); --pad-shadow: rgba(59,130,246,0.4); }
+    .pad-hihat   { --pad-bg: linear-gradient(135deg, #14532d, #22c55e); --pad-shadow: rgba(34,197,94,0.4); }
+    .pad-tom     { --pad-bg: linear-gradient(135deg, #581c87, #a855f7); --pad-shadow: rgba(168,85,247,0.4); }
+    .pad-crash   { --pad-bg: linear-gradient(135deg, #713f12, #f59e0b); --pad-shadow: rgba(245,158,11,0.4); }
+    .pad-clap    { --pad-bg: linear-gradient(135deg, #831843, #ec4899); --pad-shadow: rgba(236,72,153,0.4); }
+    .pad-ride    { --pad-bg: linear-gradient(135deg, #0f4c75, #00b4d8); --pad-shadow: rgba(0,180,216,0.4); }
+    .pad-cowbell { --pad-bg: linear-gradient(135deg, #3d1c02, #e07b00); --pad-shadow: rgba(224,123,0,0.4); }
+    .pad-bass    { --pad-bg: linear-gradient(135deg, #0d1b2a, #415a77); --pad-shadow: rgba(65,90,119,0.4); }
+
+    /* Ripple particle */
+    .ripple {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: rippleOut 0.6s ease-out forwards;
+      z-index: 999;
+    }
+
+    @keyframes rippleOut {
+      from { opacity: 0.7; transform: scale(0); }
+      to   { opacity: 0; transform: scale(4); }
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 8px 16px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .visualizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 60px;
+      margin-bottom: 24px;
+    }
+
+    .bar {
+      width: 10px;
+      background: linear-gradient(to top, #ff6fd8, #a855f7);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.08s;
+      min-height: 4px;
+    }
+  </style>
+</head>
+<body>
+  <a class="back-btn" href="../../index.html">← חזרה</a>
+
+  <h1>🥁 מכונת תופים</h1>
+  <p class="subtitle">לחץ על הכפתורים במייקי-מייקי או על המסך</p>
+
+  <div class="visualizer" id="visualizer">
+    <div class="bar" style="height:8px"></div>
+    <div class="bar" style="height:12px"></div>
+    <div class="bar" style="height:20px"></div>
+    <div class="bar" style="height:16px"></div>
+    <div class="bar" style="height:8px"></div>
+    <div class="bar" style="height:24px"></div>
+    <div class="bar" style="height:10px"></div>
+    <div class="bar" style="height:18px"></div>
+    <div class="bar" style="height:6px"></div>
+    <div class="bar" style="height:14px"></div>
+    <div class="bar" style="height:22px"></div>
+    <div class="bar" style="height:8px"></div>
+  </div>
+
+  <div class="drum-kit" id="kit">
+    <div class="pad pad-kick"    data-key="ArrowLeft"  data-sound="kick">
+      <span class="pad-icon">🔴</span>
+      <span class="pad-name">קיק</span>
+      <span class="pad-key">←</span>
+    </div>
+    <div class="pad pad-snare"   data-key=" "          data-sound="snare">
+      <span class="pad-icon">🔵</span>
+      <span class="pad-name">סנייר</span>
+      <span class="pad-key">SPACE</span>
+    </div>
+    <div class="pad pad-hihat"   data-key="ArrowRight" data-sound="hihat">
+      <span class="pad-icon">🟢</span>
+      <span class="pad-name">היי-האט</span>
+      <span class="pad-key">→</span>
+    </div>
+    <div class="pad pad-tom"     data-key="ArrowUp"    data-sound="tom">
+      <span class="pad-icon">🟣</span>
+      <span class="pad-name">טום</span>
+      <span class="pad-key">↑</span>
+    </div>
+    <div class="pad pad-crash"   data-key="ArrowDown"  data-sound="crash">
+      <span class="pad-icon">🟡</span>
+      <span class="pad-name">קראש</span>
+      <span class="pad-key">↓</span>
+    </div>
+    <div class="pad pad-clap"    data-key="w"          data-sound="clap">
+      <span class="pad-icon">🩷</span>
+      <span class="pad-name">מחיאות</span>
+      <span class="pad-key">W</span>
+    </div>
+    <div class="pad pad-ride"    data-key="a"          data-sound="ride">
+      <span class="pad-icon">🔷</span>
+      <span class="pad-name">ריידר</span>
+      <span class="pad-key">A</span>
+    </div>
+    <div class="pad pad-cowbell" data-key="s"          data-sound="cowbell">
+      <span class="pad-icon">🔔</span>
+      <span class="pad-name">פעמון</span>
+      <span class="pad-key">S</span>
+    </div>
+    <div class="pad pad-bass"    data-key="f"          data-sound="bass">
+      <span class="pad-icon">🎸</span>
+      <span class="pad-name">בס</span>
+      <span class="pad-key">F</span>
+    </div>
+  </div>
+
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // ── Synthesized drum sounds ──────────────────────────────────────────────
+
+    function playKick() {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      gain.gain.setValueAtTime(1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function playSnare() {
+      // Noise burst
+      const bufferSize = audioCtx.sampleRate * 0.2;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass'; filter.frequency.value = 2500;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+      src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+      src.start();
+      // Tonal body
+      const osc = audioCtx.createOscillator();
+      const ogain = audioCtx.createGain();
+      osc.frequency.value = 200;
+      ogain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      ogain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+      osc.connect(ogain); ogain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playHihat(open = false) {
+      const bufferSize = audioCtx.sampleRate * (open ? 0.4 : 0.1);
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource(); src.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass'; filter.frequency.value = 7000;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (open ? 0.4 : 0.08));
+      src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+      src.start();
+    }
+
+    function playTom() {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playCrash() {
+      const bufferSize = audioCtx.sampleRate * 1.0;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource(); src.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass'; filter.frequency.value = 5000;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+      src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+      src.start();
+    }
+
+    function playClap() {
+      [0, 0.01, 0.02].forEach(offset => {
+        const bufferSize = Math.floor(audioCtx.sampleRate * 0.15);
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const src = audioCtx.createBufferSource(); src.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass'; filter.frequency.value = 1200; filter.Q.value = 0.5;
+        const gain = audioCtx.createGain();
+        const t = audioCtx.currentTime + offset;
+        gain.gain.setValueAtTime(0.7, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+        src.start(t);
+      });
+    }
+
+    function playRide() {
+      const bufferSize = audioCtx.sampleRate * 0.6;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource(); src.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass'; filter.frequency.value = 5000; filter.Q.value = 2;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+      src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+      src.start();
+    }
+
+    function playCowbell() {
+      const freqs = [562, 845];
+      freqs.forEach(f => {
+        const osc = audioCtx.createOscillator();
+        osc.type = 'square'; osc.frequency.value = f;
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+      });
+    }
+
+    function playBass() {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sawtooth'; osc.frequency.value = 55;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass'; filter.frequency.value = 400;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    const soundMap = {
+      kick: playKick, snare: playSnare, hihat: playHihat,
+      tom: playTom, crash: playCrash, clap: playClap,
+      ride: playRide, cowbell: playCowbell, bass: playBass
+    };
+
+    const keyMap = {};
+    document.querySelectorAll('.pad').forEach(pad => {
+      keyMap[pad.dataset.key] = pad;
+    });
+
+    // ── Visualizer ───────────────────────────────────────────────────────────
+    const bars = document.querySelectorAll('.bar');
+    let vizActive = false;
+
+    function flashViz() {
+      if (vizActive) return;
+      vizActive = true;
+      bars.forEach(b => {
+        const h = Math.random() * 55 + 5;
+        b.style.height = h + 'px';
+      });
+      setTimeout(() => {
+        bars.forEach(b => b.style.height = (Math.random() * 10 + 4) + 'px');
+        vizActive = false;
+      }, 120);
+    }
+
+    // ── Hit handler ──────────────────────────────────────────────────────────
+    function hitPad(pad) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const sound = pad.dataset.sound;
+      if (soundMap[sound]) soundMap[sound]();
+      pad.classList.add('active');
+      setTimeout(() => pad.classList.remove('active'), 120);
+      flashViz();
+      spawnRipple(pad);
+    }
+
+    function spawnRipple(el) {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const size = Math.max(rect.width, rect.height);
+      const div = document.createElement('div');
+      div.className = 'ripple';
+      div.style.cssText = `width:${size}px;height:${size}px;left:${cx - size/2}px;top:${cy - size/2}px;background:${getComputedStyle(el).getPropertyValue('--pad-shadow') || 'rgba(255,255,255,0.4)'};`;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 600);
+    }
+
+    // ── Events ───────────────────────────────────────────────────────────────
+    document.querySelectorAll('.pad').forEach(pad => {
+      pad.addEventListener('mousedown', () => hitPad(pad));
+      pad.addEventListener('touchstart', e => { e.preventDefault(); hitPad(pad); });
+    });
+
+    document.addEventListener('keydown', e => {
+      const pad = keyMap[e.key];
+      if (pad && !e.repeat) hitPad(pad);
+    });
+  </script>
+</body>
+</html>

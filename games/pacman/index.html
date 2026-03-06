@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👾 פאק-מן</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Nunito', sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    #hud {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 12px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.4rem;
+    }
+
+    #hud span { color: #ffd700; }
+
+    #canvas {
+      border: 3px solid #2121de;
+      border-radius: 8px;
+      box-shadow: 0 0 40px rgba(33,33,222,0.6), 0 0 80px rgba(33,33,222,0.3);
+      display: block;
+      max-width: 95vw;
+      max-height: 75vh;
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      font-family: 'Fredoka One', cursive;
+      text-align: center;
+      gap: 20px;
+    }
+
+    #overlay h2 { font-size: clamp(2rem, 8vw, 4rem); }
+    #overlay p  { font-size: 1.2rem; color: #a0a8ff; }
+
+    .btn {
+      padding: 14px 40px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.4rem;
+      background: #ffd700;
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .btn:hover { transform: scale(1.08); }
+
+    .back-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 8px 14px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.85rem;
+      z-index: 20;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .lives { color: #ffd700; font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+  <a class="back-btn" href="../../index.html">← חזרה</a>
+
+  <div id="hud">
+    <div>ניקוד: <span id="score">0</span></div>
+    <div>שיא: <span id="hiScore">0</span></div>
+    <div class="lives" id="lives">❤️❤️❤️</div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="overlay">
+    <h2 id="overlayTitle">👾 פאק-מן</h2>
+    <p id="overlayMsg">השתמש בחצי המייקי-מייקי כדי לזוז<br>אכול את כל הנקודות, ברח מהרוחות!</p>
+    <button class="btn" id="startBtn">התחל משחק!</button>
+  </div>
+
+  <script>
+  (() => {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('startBtn');
+    const scoreEl = document.getElementById('score');
+    const hiScoreEl = document.getElementById('hiScore');
+    const livesEl = document.getElementById('lives');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlayMsg = document.getElementById('overlayMsg');
+
+    // ── Audio ────────────────────────────────────────────────────────────────
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+
+    function beep(freq, dur, type='sine', vol=0.3) {
+      if (ac.state === 'suspended') ac.resume();
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      g.gain.setValueAtTime(vol, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(); osc.stop(ac.currentTime + dur);
+    }
+
+    function playEat() {
+      const notes = [523, 659, 784];
+      notes.forEach((f, i) => {
+        setTimeout(() => beep(f, 0.07, 'sine', 0.2), i * 40);
+      });
+    }
+
+    function playPowerPellet() {
+      [200,300,400,600].forEach((f,i) => setTimeout(() => beep(f, 0.1, 'square', 0.3), i*60));
+    }
+
+    function playDeath() {
+      [400,350,300,250,200,150].forEach((f,i) => setTimeout(() => beep(f, 0.12, 'sawtooth', 0.4), i*80));
+    }
+
+    function playEatGhost() {
+      [800,1000,1200].forEach((f,i) => setTimeout(() => beep(f, 0.1, 'square', 0.5), i*50));
+    }
+
+    function playLevelUp() {
+      [262,330,392,523,659,784].forEach((f,i) => setTimeout(() => beep(f, 0.12, 'sine', 0.4), i*80));
+    }
+
+    // ── Map ──────────────────────────────────────────────────────────────────
+    // 0=empty, 1=wall, 2=dot, 3=power, 4=ghost-house
+    const TEMPLATE = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+      [1,3,1,1,2,1,1,1,2,1,1,1,2,1,1,1,2,1,1,3,1],
+      [1,2,1,1,2,1,1,1,2,1,1,1,2,1,1,1,2,1,1,2,1],
+      [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+      [1,2,1,1,2,1,2,1,1,1,1,1,1,1,2,1,2,1,1,2,1],
+      [1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1],
+      [1,1,1,1,2,1,1,1,0,0,0,0,0,1,1,1,2,1,1,1,1],
+      [1,1,1,1,2,1,0,0,0,4,4,4,0,0,0,1,2,1,1,1,1],
+      [1,1,1,1,2,1,0,4,4,4,4,4,4,4,0,1,2,1,1,1,1],
+      [0,0,0,0,2,0,0,4,4,4,4,4,4,4,0,0,2,0,0,0,0],
+      [1,1,1,1,2,1,0,4,4,4,4,4,4,4,0,1,2,1,1,1,1],
+      [1,1,1,1,2,1,0,0,0,0,0,0,0,0,0,1,2,1,1,1,1],
+      [1,1,1,1,2,1,0,1,1,1,1,1,1,1,0,1,2,1,1,1,1],
+      [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1],
+      [1,2,1,1,2,1,1,1,2,1,1,1,2,1,1,1,2,1,1,2,1],
+      [1,3,2,1,2,2,2,2,2,2,0,2,2,2,2,2,2,1,2,3,1],
+      [1,1,2,1,2,1,2,1,1,1,1,1,1,1,2,1,2,1,2,1,1],
+      [1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,1],
+      [1,2,1,1,1,1,1,1,2,1,1,1,2,1,1,1,1,1,1,2,1],
+      [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ];
+
+    const ROWS = TEMPLATE.length;
+    const COLS = TEMPLATE[0].length;
+    const TILE = 28;
+
+    // ── Resize canvas ────────────────────────────────────────────────────────
+    canvas.width = COLS * TILE;
+    canvas.height = ROWS * TILE;
+
+    // Scale for smaller screens
+    const scale = Math.min(
+      (window.innerWidth * 0.95) / canvas.width,
+      (window.innerHeight * 0.78) / canvas.height,
+      1
+    );
+    canvas.style.width  = canvas.width  * scale + 'px';
+    canvas.style.height = canvas.height * scale + 'px';
+
+    // ── Game state ───────────────────────────────────────────────────────────
+    let map, pacman, ghosts, score, hiScore = 0, lives, totalDots, dotsEaten;
+    let gameState = 'idle'; // idle | playing | dead | won | over
+    let powerTimer = 0;
+    let animFrame;
+
+    const GHOST_COLORS = ['#ff0000','#ffb8ff','#00ffff','#ffb852'];
+    const GHOST_NAMES  = ['Blinky','Pinky','Inky','Clyde'];
+
+    function resetMap() {
+      map = TEMPLATE.map(row => [...row]);
+      totalDots = 0;
+      dotsEaten = 0;
+      for (let r = 0; r < ROWS; r++)
+        for (let c = 0; c < COLS; c++)
+          if (map[r][c] === 2 || map[r][c] === 3) totalDots++;
+    }
+
+    function resetPacman() {
+      pacman = { row: 16, col: 10, dir: {r:0,c:0}, nextDir: {r:0,c:0}, mouth: 0, mouthDir: 1, moving: false };
+    }
+
+    function resetGhosts() {
+      ghosts = [
+        { row:9, col:9,  dir:{r:-1,c:0}, color:GHOST_COLORS[0], scared:false, eaten:false, speed:0, tick:0 },
+        { row:9, col:10, dir:{r:0,c:1},  color:GHOST_COLORS[1], scared:false, eaten:false, speed:0, tick:0 },
+        { row:9, col:11, dir:{r:1,c:0},  color:GHOST_COLORS[2], scared:false, eaten:false, speed:0, tick:0 },
+        { row:10,col:10, dir:{r:0,c:-1}, color:GHOST_COLORS[3], scared:false, eaten:false, speed:0, tick:0 },
+      ];
+    }
+
+    function startGame(fromLevel = false) {
+      if (!fromLevel) { score = 0; lives = 3; }
+      resetMap();
+      resetPacman();
+      resetGhosts();
+      powerTimer = 0;
+      gameState = 'playing';
+      overlay.style.display = 'none';
+      scoreEl.textContent = score;
+      updateLives();
+      if (!fromLevel) playIntroJingle();
+      loop();
+    }
+
+    function playIntroJingle() {
+      [262,330,262,330,392,330,392,523].forEach((f,i) => setTimeout(()=>beep(f,0.12,'sine',0.3), i*120));
+    }
+
+    function updateLives() {
+      livesEl.textContent = '❤️'.repeat(Math.max(0, lives));
+    }
+
+    // ── Input ────────────────────────────────────────────────────────────────
+    const keys = {};
+    document.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+      if (gameState === 'idle' || gameState === 'won' || gameState === 'over') {
+        if (e.key === ' ' || e.key === 'Enter') startBtn.click();
+      }
+    });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    function readInput() {
+      if (keys['ArrowUp'])    pacman.nextDir = {r:-1,c:0};
+      if (keys['ArrowDown'])  pacman.nextDir = {r:1,c:0};
+      if (keys['ArrowLeft'])  pacman.nextDir = {r:0,c:-1};
+      if (keys['ArrowRight']) pacman.nextDir = {r:0,c:1};
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function canMove(row, col, dr, dc) {
+      const nr = row + dr, nc = (col + dc + COLS) % COLS;
+      if (nr < 0 || nr >= ROWS) return false;
+      return map[nr][nc] !== 1;
+    }
+
+    function wrapCol(col) { return (col + COLS) % COLS; }
+
+    // ── Ghost AI ─────────────────────────────────────────────────────────────
+    const GHOST_SPEED = 6; // move every N frames
+
+    function moveGhost(g, idx) {
+      g.tick++;
+      const spd = g.scared ? GHOST_SPEED + 3 : (g.eaten ? 2 : GHOST_SPEED);
+      if (g.tick < spd) return;
+      g.tick = 0;
+
+      // If eaten and back at house, revive
+      if (g.eaten && g.row === 9 && (g.col >= 9 && g.col <= 11)) {
+        g.eaten = false; g.scared = false;
+      }
+
+      const dirs = [{r:-1,c:0},{r:1,c:0},{r:0,c:-1},{r:0,c:1}];
+      const opp  = {r: -g.dir.r, c: -g.dir.c};
+      const valid = dirs.filter(d => {
+        if (d.r === opp.r && d.c === opp.c) return false; // no u-turn
+        return canMove(g.row, g.col, d.r, d.c);
+      });
+      if (valid.length === 0) { // forced u-turn
+        if (canMove(g.row, g.col, opp.r, opp.c)) { g.dir = opp; }
+        return;
+      }
+
+      let chosen;
+      if (g.scared || g.eaten) {
+        // Random when scared; chase house when eaten
+        if (g.eaten) {
+          // Head toward (9,10)
+          chosen = valid.reduce((best, d) => {
+            const nr = g.row + d.r, nc = (g.col + d.c + COLS) % COLS;
+            const dist = Math.abs(nr-9) + Math.abs(nc-10);
+            const bd   = Math.abs(g.row+best.r-9) + Math.abs((g.col+best.c+COLS)%COLS-10);
+            return dist < bd ? d : best;
+          });
+        } else {
+          chosen = valid[Math.floor(Math.random() * valid.length)];
+        }
+      } else {
+        // Chase Pac-Man (Blinky) or scatter (others)
+        let targetR = pacman.row, targetC = pacman.col;
+        if (idx === 1) { targetR = pacman.row + pacman.dir.r*3; targetC = pacman.col + pacman.dir.c*3; }
+        if (idx === 2) { targetR = (ROWS - 1 - pacman.row); targetC = (COLS - 1 - pacman.col); }
+        if (idx === 3 && Math.random() < 0.4) { targetR = ROWS-2; targetC = 1; }
+
+        chosen = valid.reduce((best, d) => {
+          const nr = g.row + d.r, nc = (g.col + d.c + COLS) % COLS;
+          const dist = Math.abs(nr-targetR) + Math.abs(nc-targetC);
+          const bd   = Math.abs(g.row+best.r-targetR) + Math.abs((g.col+best.c+COLS)%COLS-targetC);
+          return dist < bd ? d : best;
+        });
+      }
+
+      g.dir = chosen;
+      g.row += chosen.r;
+      g.col = wrapCol(g.col + chosen.c);
+    }
+
+    // ── Pac-Man movement ─────────────────────────────────────────────────────
+    let pacTick = 0;
+    const PAC_SPEED = 4;
+
+    function movePacman() {
+      pacTick++;
+      if (pacTick < PAC_SPEED) return;
+      pacTick = 0;
+
+      readInput();
+
+      // Try nextDir first
+      if (canMove(pacman.row, pacman.col, pacman.nextDir.r, pacman.nextDir.c)) {
+        pacman.dir = {...pacman.nextDir};
+      }
+
+      if (canMove(pacman.row, pacman.col, pacman.dir.r, pacman.dir.c)) {
+        pacman.row += pacman.dir.r;
+        pacman.col  = wrapCol(pacman.col + pacman.dir.c);
+        pacman.moving = true;
+      } else {
+        pacman.moving = false;
+      }
+
+      // Eat
+      const cell = map[pacman.row][pacman.col];
+      if (cell === 2) {
+        map[pacman.row][pacman.col] = 0;
+        score += 10; dotsEaten++;
+        scoreEl.textContent = score;
+        playEat();
+        if (dotsEaten >= totalDots) winLevel();
+      } else if (cell === 3) {
+        map[pacman.row][pacman.col] = 0;
+        score += 50; dotsEaten++;
+        scoreEl.textContent = score;
+        powerTimer = 300;
+        ghosts.forEach(g => { if (!g.eaten) g.scared = true; });
+        playPowerPellet();
+        if (dotsEaten >= totalDots) winLevel();
+      }
+    }
+
+    // ── Collision ────────────────────────────────────────────────────────────
+    function checkCollisions() {
+      ghosts.forEach(g => {
+        if (g.row === pacman.row && g.col === pacman.col) {
+          if (g.scared && !g.eaten) {
+            g.scared = false; g.eaten = true;
+            score += 200; scoreEl.textContent = score;
+            if (score > hiScore) { hiScore = score; hiScoreEl.textContent = hiScore; }
+            playEatGhost();
+          } else if (!g.eaten) {
+            diePacman();
+          }
+        }
+      });
+    }
+
+    function diePacman() {
+      gameState = 'dead';
+      playDeath();
+      lives--;
+      updateLives();
+      setTimeout(() => {
+        if (lives <= 0) {
+          gameOver();
+        } else {
+          resetPacman();
+          resetGhosts();
+          powerTimer = 0;
+          gameState = 'playing';
+          loop();
+        }
+      }, 1500);
+    }
+
+    function winLevel() {
+      gameState = 'won';
+      playLevelUp();
+      if (score > hiScore) { hiScore = score; hiScoreEl.textContent = hiScore; }
+      overlayTitle.textContent = '🎉 כל הכבוד!';
+      overlayMsg.textContent = 'עברת את השלב! ';
+      startBtn.textContent = 'שלב הבא!';
+      overlay.style.display = 'flex';
+      startBtn.onclick = () => startGame(true);
+    }
+
+    function gameOver() {
+      gameState = 'over';
+      if (score > hiScore) { hiScore = score; hiScoreEl.textContent = hiScore; }
+      overlayTitle.textContent = '💀 משחק נגמר';
+      overlayMsg.innerHTML = `ניקוד: ${score}<br>שיא: ${hiScore}`;
+      startBtn.textContent = 'שחק שוב!';
+      overlay.style.display = 'flex';
+      startBtn.onclick = () => startGame(false);
+    }
+
+    // ── Draw ─────────────────────────────────────────────────────────────────
+    function drawMap() {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const x = c * TILE, y = r * TILE;
+          const cell = map[r][c];
+          if (cell === 1) {
+            ctx.fillStyle = '#2121de';
+            ctx.fillRect(x, y, TILE, TILE);
+            // Inner lighter edge
+            ctx.fillStyle = '#4444ff';
+            ctx.fillRect(x+2, y+2, TILE-4, TILE-4);
+            ctx.fillStyle = '#2121de';
+            ctx.fillRect(x+4, y+4, TILE-8, TILE-8);
+          } else {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x, y, TILE, TILE);
+            if (cell === 2) {
+              ctx.beginPath();
+              ctx.arc(x + TILE/2, y + TILE/2, 3, 0, Math.PI*2);
+              ctx.fillStyle = '#ffde59';
+              ctx.fill();
+            } else if (cell === 3) {
+              const t = Date.now() / 300;
+              const r2 = 7 + Math.sin(t) * 2;
+              ctx.beginPath();
+              ctx.arc(x + TILE/2, y + TILE/2, r2, 0, Math.PI*2);
+              ctx.fillStyle = '#ff69b4';
+              ctx.shadowColor = '#ff69b4';
+              ctx.shadowBlur = 12;
+              ctx.fill();
+              ctx.shadowBlur = 0;
+            }
+          }
+        }
+      }
+    }
+
+    let mouthAngle = 0;
+    let mouthDelta = 0.15;
+
+    function drawPacman() {
+      if (gameState === 'dead') return;
+      mouthAngle += mouthDelta;
+      if (mouthAngle > 0.4 || mouthAngle < 0) mouthDelta *= -1;
+
+      const x = pacman.col * TILE + TILE/2;
+      const y = pacman.row * TILE + TILE/2;
+      const r = TILE/2 - 2;
+
+      // Rotation based on direction
+      let rot = 0;
+      if      (pacman.dir.r === -1) rot = -Math.PI/2;
+      else if (pacman.dir.r ===  1) rot =  Math.PI/2;
+      else if (pacman.dir.c === -1) rot =  Math.PI;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, r, mouthAngle, Math.PI * 2 - mouthAngle);
+      ctx.closePath();
+      ctx.fillStyle = '#ffd700';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Eye
+      ctx.beginPath();
+      ctx.arc(r * 0.3, -r * 0.5, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#000';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawGhost(g) {
+      const x = g.col * TILE;
+      const y = g.row * TILE;
+      const w = TILE - 2, h = TILE - 2;
+      const cx = x + TILE/2, cy = y + TILE/2;
+
+      let color = g.color;
+      if (g.eaten) color = 'rgba(0,0,255,0.3)';
+      else if (g.scared) {
+        color = powerTimer < 80 && Math.floor(Date.now()/200)%2 === 0 ? '#fff' : '#2121de';
+      }
+
+      ctx.save();
+      ctx.translate(x + 1, y + 1);
+
+      // Body
+      ctx.beginPath();
+      ctx.arc(w/2, h/2 - 2, w/2, Math.PI, 0);
+      ctx.lineTo(w, h);
+      // Wavy bottom
+      const waves = 3;
+      const ww = w / waves;
+      for (let i = waves - 1; i >= 0; i--) {
+        ctx.quadraticCurveTo(
+          (i + 0.75) * ww, h + 6,
+          (i + 0.5)  * ww, h
+        );
+        ctx.quadraticCurveTo(
+          (i + 0.25) * ww, h - 6,
+          i          * ww, h
+        );
+      }
+      ctx.closePath();
+      ctx.fillStyle = color;
+      if (!g.eaten) { ctx.shadowColor = color; ctx.shadowBlur = 8; }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Eyes
+      if (!g.eaten) {
+        const eyeY = h/2 - 3;
+        [[w*0.3, eyeY],[w*0.7, eyeY]].forEach(([ex, ey]) => {
+          ctx.beginPath(); ctx.arc(ex, ey, 4, 0, Math.PI*2);
+          ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.beginPath(); ctx.arc(ex + 1, ey + 1, 2, 0, Math.PI*2);
+          ctx.fillStyle = g.scared ? '#fff' : '#00f'; ctx.fill();
+        });
+        if (g.scared) {
+          // Scared mouth
+          ctx.beginPath();
+          ctx.moveTo(w*0.2, h*0.65);
+          for (let i = 0; i <= 4; i++) {
+            ctx.lineTo(w*0.2 + i*(w*0.6/4), h*0.65 + (i%2===0 ? 4 : -4));
+          }
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+      } else {
+        // Just eyes showing eaten state
+        [[w*0.3, h/2-3],[w*0.7, h/2-3]].forEach(([ex,ey]) => {
+          ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI*2);
+          ctx.fillStyle = '#00ffff'; ctx.fill();
+        });
+      }
+
+      ctx.restore();
+    }
+
+    function drawScore() {
+      // Already in HUD
+    }
+
+    let lastTime = 0;
+
+    function frame(ts) {
+      if (gameState !== 'playing') return;
+      animFrame = requestAnimationFrame(frame);
+
+      // Power timer
+      if (powerTimer > 0) {
+        powerTimer--;
+        if (powerTimer === 0) {
+          ghosts.forEach(g => { g.scared = false; });
+        }
+      }
+
+      movePacman();
+      ghosts.forEach((g, i) => moveGhost(g, i));
+      checkCollisions();
+
+      // Draw
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawMap();
+      drawPacman();
+      ghosts.forEach(drawGhost);
+    }
+
+    function loop() {
+      cancelAnimationFrame(animFrame);
+      animFrame = requestAnimationFrame(frame);
+    }
+
+    // ── Start button ─────────────────────────────────────────────────────────
+    startBtn.onclick = () => startGame(false);
+
+  })();
+  </script>
+</body>
+</html>
